@@ -51,25 +51,29 @@ int hashFunction1(int key, int N){
 }
 
 int hashFunction2(int key, int N) {
-//    long l = 2654435769L;
-//    return (key * l >> 32) % N ;
-    return (key >> 8 ^ key << 24) % N;
+    return ((key >> 8 & key << 24)^(key >> 24 & key << 8)) % N;
 }
 
 int hashFunction3(int key, int N){
-    return (key >> 24 ^ key << 8) % N;
+    return ((key >> 4 & key << 8)^(key >> 8 & key << 4)) % N;
 }
 
 int hashFunction4(int key, int N) {
-    return (key >> 16 ^ key << 16) % N;
+    long l = 2654435769L;
+    return (key * l >> 32) % N ;
+//    return ((key >> 16 & key << 16)^(key >>  & key << 8)) % N;
 }
 
 int getMinHash(unordered_set<int>& numSet, hashFuncType hashFn){
-    int minHash = INT_MAX;
+    int minHash = INT_MAX, temp;
+    int ans = 0;
     for(int x: numSet){
-        minHash = min(minHash, hashFn(x, INT_MAX));
+        if(minHash > (temp = hashFn(x, INT_MAX))){
+            minHash = temp;
+            ans = x;
+        }
     }
-    return minHash;
+    return ans;
 }
 
 int estimateSetDiffSize(unordered_set<int>& A, unordered_set<int>& B, vector<hashFuncType>& hashes){
@@ -77,8 +81,9 @@ int estimateSetDiffSize(unordered_set<int>& A, unordered_set<int>& B, vector<has
     for(hashFuncType& hashFn: hashes){
         if(getMinHash(A, hashFn) == getMinHash(B, hashFn)) m++;
     }
-    int k = hashes.size();
-    return (m + k - 1) / k;
+    float k = hashes.size();
+    float r = float(m)/k;
+    return ((1.-r)/(1.+r))*(float(A.size()+B.size()));
 }
 
 void encode(unordered_set<int>& numSet, int N,
@@ -172,7 +177,7 @@ unordered_set<int> getSetDifference(unordered_set<int>& A,
 
 int main(int argc, char *argv[]) {
     unordered_set<int> A = {40,12,59,32,74,32,52,7,89,43,75,67,88,112};
-    unordered_set<int> B = {52,7,89,43,71,67,88,112,40,12,59,32,93,32};
+    unordered_set<int> B = {52,7,89,546,71,67,88,165,40,12,59,32,93,32};
 
     vector<hashFuncType> hashes;
     hashes.push_back(hashFunction1);
