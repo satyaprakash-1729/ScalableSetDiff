@@ -141,6 +141,8 @@ bool decode(vector<IBFCell*>& diff, unordered_set<int>& diff_A_B,
             diff[idx]->setIdSum(diff[idx]->getIdSum()^idSum);
             diff[idx]->setHashSum(diff[idx]->getHashSum()^Hc(idSum, N));
             diff[idx]->setCount(diff[idx]->getCount()-count);
+            if (isPure(diff, Hc, idx, N))
+                pureList.push(idx);
         }
     }
     for(int i=0; i<N; i++){
@@ -166,7 +168,10 @@ unordered_set<int> getSetDifference(unordered_set<int>& A,
     unordered_set<int> diff_A_B;
     unordered_set<int> diff_B_A;
 
-    decode(diff, diff_A_B, diff_B_A, hashes, Hc, N);
+    bool stat = decode(diff, diff_A_B, diff_B_A, hashes, Hc, N);
+    if(!stat){
+        cout<<"Error finding difference... All differences might not be recorded.\n";
+    }
 
     unordered_set<int> ans;
     ans.insert(diff_A_B.begin(), diff_A_B.end());
