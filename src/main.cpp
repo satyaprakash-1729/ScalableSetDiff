@@ -183,6 +183,7 @@ public:
     }
 
     int getNumTrailingZeros(int x){
+        if(!x) return 0;
         int ans = 0;
         while(!x%2){
             x = x>>1;
@@ -219,8 +220,8 @@ public:
 };
 
 int main(int argc, char *argv[]) {
-    unordered_set<int> A = {401,12,59,32,74,39,52,7,89,43,75,67,488,112};
-    unordered_set<int> B = {52,7,89,546,71,67,88,165,40,12,59,39,93,32};
+    unordered_set<int> A = {0,1,2,3,4,5,6};
+    unordered_set<int> B = {0,1,2,3,4,5,6};
 
     int k = 3;
 
@@ -288,19 +289,22 @@ int main(int argc, char *argv[]) {
     strata2->encode(B, Hc);
     int d = strata1->estimateLength(strata2, Hc);
     cout<<"Estimated Set Diff Size: "<<d<<endl;
+    if(d) {
+        float alpha = 1.5;
 
-    float alpha = 1.5;
-
-    int N = d*alpha;
-    cout<<"Calculating Set Difference ...\n";
-    vector<unordered_set<int>> setDiff = getSetDifference(A, B, 1000, k, Hc);
-    cout<<"---- SET DIFFERENCE A-B ----\n";
-    for(int x : setDiff[0]){
-        cout<<x<<endl;
-    }
-    cout<<"---- SET DIFFERENCE B-A ----\n";
-    for(int x : setDiff[1]){
-        cout<<x<<endl;
+        int N = d * alpha;
+        cout << "Calculating Set Difference ...\n";
+        vector<unordered_set<int>> setDiff = getSetDifference(A, B, N, k, Hc);
+        cout << "---- SET DIFFERENCE A-B ----\n";
+        for (int x : setDiff[0]) {
+            cout << x << endl;
+        }
+        cout << "---- SET DIFFERENCE B-A ----\n";
+        for (int x : setDiff[1]) {
+            cout << x << endl;
+        }
+    }else{
+        cout<<"Sets Identical...\n";
     }
     unordered_set<int> diff;
     set_difference(A.begin(), A.end(), B.begin(),
