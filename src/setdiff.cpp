@@ -28,20 +28,7 @@ private:
         
         return (out[0] == this->hash_sum[ind]);
     }
-
-public:
-    uint32_t size;
-    vector<int32_t> count;
-    vector<uint32_t> id_sum;
-    vector<uint32_t> hash_sum;
-    /* data */
-
-    IBF(uint32_t size, uint32_t key_size): size(size), key_size(key_size){
-        this->count.resize(size,0);
-        this->id_sum.resize(size,0);
-        this->hash_sum.resize(size,0);
-    }
-
+    
     void get_hashes(void* key, uint32_t out[]){
         MurmurHash3_x64_128(key,this->key_size,this->seed,out);
     }
@@ -52,15 +39,23 @@ public:
             out[i] = out[i]%this->size;
         }
     }
+    
 
-    void add_key(void* key){
-        uint32_t out[4];
-        get_indices(key,out);
-        for(int i = 1; i < 4; i++){
-            this->count[out[i]]++;
-            this->id_sum[out[i]] ^= ((uint32_t*)key)[0];
-            this->hash_sum[out[i]] ^= out[0];
-        }
+public:
+    uint32_t size;
+    vector<int32_t> count;
+    vector<uint32_t> id_sum;
+    vector<uint32_t> hash_sum;
+    
+    /**
+     * size - number of IBF cells in the Invertible Bloom Filter
+     * key_size - size of key in IBF
+     */
+
+    IBF(uint32_t size, uint32_t key_size): size(size), key_size(key_size){
+        this->count.resize(size,0);
+        this->id_sum.resize(size,0);
+        this->hash_sum.resize(size,0);
     }
 
     IBF* subtract(IBF *B){
@@ -72,6 +67,16 @@ public:
             ibf->hash_sum[i] = this->hash_sum[i]^B->hash_sum[i];
         }
         return ibf;
+    }
+    
+    void add_key(void* key){
+        uint32_t out[4];
+        get_indices(key,out);
+        for(int i = 1; i < 4; i++){
+            this->count[out[i]]++;
+            this->id_sum[out[i]] ^= ((uint32_t*)key)[0];
+            this->hash_sum[out[i]] ^= out[0];
+        }
     }
 
     void encode(vector<int> arr){
@@ -173,14 +178,11 @@ class Strata_IBF
 {
     IBF **ibfs;
     int num;
-public:
-    Strata_IBF(uint32_t size, uint32_t key_size, uint32_t num):num(num){
-        ibfs = (IBF **) malloc(num*sizeof(IBF*));
-        for(int i = 0; i < num; i++){
-            ibfs[i] = new IBF(size,key_size);
-        }
-    }
     
+private:
+    /**
+     * Helper function to calculate number of trailing zeroes in a key.
+     */
     uint32_t trailing_zeroes(uint32_t n) {
         uint32_t bits = 0, x = n;
 
@@ -200,6 +202,28 @@ public:
         return bits;
     }
     
+public:
+    /**
+     * size - number of IBF cells in each Invertible Bloom Filter
+     * key_size - size of key in IBF
+     * num - log(U) - max number of bits in a key (Needed to estimate d - estimate of difference
+     */
+    Strata_IBF(uint32_t size, uint32_t key_size, uint32_t num):num(num){
+        ibfs = (IBF **) malloc(num*sizeof(IBF*));
+        for(int i = 0; i < num; i++){
+            ibfs[i] = new IBF(size,key_size);
+        }
+    }
+    
+    ~Strata_IBF(){
+        for(int i = 0; i < num; i++)
+            free(ibfs[i]);
+        free(ibfs);
+    }
+    
+    /**
+     * Initializes the Strata Estimator with keys in 'v'
+     */
     void encode(vector<int> &v){
         for(int num : v){
             uint32_t n = this->trailing_zeroes(num);
@@ -207,6 +231,9 @@ public:
         }
     }
     
+    /**
+     * Method to estimate the dfference between two sets both encoded in Strata Estimators
+     */
     int estimate(Strata_IBF* sibf){
         int count = 0;
         vector<vector<int>> ans(2);
@@ -226,21 +253,22 @@ public:
 
 int main(){
     
-    vector<int> v1,v2;
+    vector<int> v1{1,2,3,4,5,6,7,8,9,10};
+    vector<int> v2{112,88,67,43,89,75,7,52,32,59};
 
-    for(int i = 0; i < 10; i++){
-        v1.push_back(i);
-        v2.push_back(i+5);
-    }
-    cout << "A : ";
-    for(int i = 0; i < 10; i++) cout << v1[i] << " "; cout << endl;
-    cout << "B : ";
-    for(int i = 0; i < 10; i++) cout << v2[i] << " "; cout << endl;
+//    for(int i = 0; i < 10; i++){
+//        v1.push_back(i);
+//        v2.push_back(i+5);
+//    }
+//    cout << "A : ";
+//    for(int i = 0; i < 10; i++) cout << v1[i] << " "; cout << endl;
+//    cout << "B : ";
+//    for(int i = 0; i < 10; i++) cout << v2[i] << " "; cout << endl;
     
     vector<vector<int>> ans(2);
 
-    Strata_IBF* sibf1 = new Strata_IBF(80,4,5);
-    Strata_IBF* sibf2 = new Strata_IBF(80,4,5);
+    Strata_IBF* sibf1 = new Strata_IBF(80,4,7);
+    Strata_IBF* sibf2 = new Strata_IBF(80,4,7);
 
     sibf1->encode(v1);
     sibf2->encode(v2);
