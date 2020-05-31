@@ -51,10 +51,14 @@ int hashFunctionK(int key, int N) {
     return h(key+1)%N;
 }
 
+int recHash(int cnt, int key, int N){
+    if(!cnt) return hashFunctionK(key, N);
+    return hashFunctionK(recHash(cnt-1, key, N), N);
+}
+
 int hashFunctionC(int key, int N) {
     hash<int> h;
-    unsigned long hval = h(key+1);
-    return (hval>>32 & hval>>16 & hval)%N;
+    return recHash(20, key, N);
 }
 
 vector<int> getDiffHashedInd(int num, int cnt, int N){
@@ -220,8 +224,8 @@ public:
 };
 
 int main(int argc, char *argv[]) {
-    unordered_set<int> A = {0,1,2,3,4,5,6};
-    unordered_set<int> B = {0,1,2,3,4,5,6};
+    unordered_set<int> A = {1, 6, 0, 2, 4, 12, 5, 7, 32};
+    unordered_set<int> B = {11, 6, 90, 21, 4, 12, 65, 7, 31};
 
     int k = 3;
 
@@ -281,14 +285,15 @@ int main(int argc, char *argv[]) {
     */
 
     hashFuncType Hc = &hashFunctionC;
-
+    int total_size = A.size() + B.size();
     cout<<"Calculating estimated set difference size...\n";
-    Strata_IBF* strata1 = new Strata_IBF(80, k, 10);
-    Strata_IBF* strata2 = new Strata_IBF(80, k, 10);
+    Strata_IBF* strata1 = new Strata_IBF(total_size*2, k, 6);
+    Strata_IBF* strata2 = new Strata_IBF(total_size*2, k, 6);
     strata1->encode(A, Hc);
     strata2->encode(B, Hc);
     int d = strata1->estimateLength(strata2, Hc);
     cout<<"Estimated Set Diff Size: "<<d<<endl;
+
     if(d) {
         float alpha = 1.5;
 
@@ -306,9 +311,10 @@ int main(int argc, char *argv[]) {
     }else{
         cout<<"Sets Identical...\n";
     }
-    unordered_set<int> diff;
-    set_difference(A.begin(), A.end(), B.begin(),
-                   B.end(), std::inserter(diff, diff.begin()));
-    cout<<"Actual Difference Size: "<<diff.size()<<endl;
+
+    int ans = 0;
+    for(int x: A) if(!B.count(x)) ans++;
+    for(int x: B) if(!A.count(x)) ans++;
+    cout<<"Actual Difference Size: "<<ans<<endl;
     return 0;
 }
