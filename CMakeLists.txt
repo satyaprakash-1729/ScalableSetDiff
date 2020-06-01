@@ -3,4 +3,7 @@ project(IBFSetDiff)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(IBFSetDiff src/main.cpp)
+add_definitions(-DALPHA=${ALPHA})
+add_definitions(-DBETA=${BETA})
+add_definitions(-DNUM_HASHES=${NUM_HASHES})
+add_executable(IBFSetDiff src/main.cpp src/util.cpp src/util.h)

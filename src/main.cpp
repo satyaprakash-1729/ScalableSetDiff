@@ -1,4 +1,4 @@
-#include <bits/stdc++.h>
+#include "util.h"
 
 using namespace std;
 typedef int (*hashFuncType)(int, int);
@@ -10,6 +10,10 @@ typedef int (*hashFuncType)(int, int);
 
 #ifndef BETA
     #define BETA 2
+#endif
+
+#ifndef NUM_HASHES
+    #define NUM_HASHES 3
 #endif
 
 class IBFCell{
@@ -67,7 +71,7 @@ int recHash(int cnt, int key, int N){
 
 int hashFunctionC(int key, int N) {
     hash<int> h;
-    return recHash(20, key, N);
+    return recHash(7, key, N);
 }
 
 vector<int> getDiffHashedInd(int num, int cnt, int N){
@@ -195,7 +199,7 @@ public:
         }
     }
 
-    int getNumTrailingZeros(int x){
+    static int getNumTrailingZeros(int x){
         if(!x) return 0;
         int ans = 0;
         while(!x%2){
@@ -223,7 +227,7 @@ public:
             unordered_set<int> s1;
             unordered_set<int> s2;
             if(decode(diff, s1, s2, this->numHashes, Hc, this->ibfSize)){
-                ans += (s1.size() + s2.size());
+                ans += (int)(s1.size() + s2.size());
             }else{
                 return (1<<(i+1))*ans;
             }
@@ -233,10 +237,15 @@ public:
 };
 
 int main(int argc, char *argv[]) {
-    unordered_set<int> A = {1, 6, 0, 2, 4, 12, 5, 7, 32};
-    unordered_set<int> B = {11, 6, 90, 21, 4, 12, 65, 7, 31};
+    unordered_set<int> A;
+    unordered_set<int> B;
 
-    int k = 3;
+    A = getRandomSet(11, 100, 300);
+    B = getRandomSet(11, 100, 300);
+
+    cout << "ALPHA: " << ALPHA << " BETA: " << BETA << " NUM HASHES: " << NUM_HASHES << endl;
+    printSet("A", A);
+    printSet("B", B);
 
     /* //These two data sets produce an incorrect set difference
     unordered_set<int> A = {40,12,59,32,74,32,52,7,89,43,75,67,88,112};
@@ -294,20 +303,28 @@ int main(int argc, char *argv[]) {
     */
 
     hashFuncType Hc = &hashFunctionC;
-    int total_size = A.size() + B.size();
+//    int total_size = (int)(A.size() + B.size());
+    int logu1 = *max_element(A.begin(), A.end());
+    int logu2 = *max_element(B.begin(), B.end());
+    int logu = (int)(log(max(logu1, logu2)) / log(2))+1;
+
+    cout<<"LOGU: "<<logu<<endl;
     cout<<"Calculating estimated set difference size...\n";
-    Strata_IBF* strata1 = new Strata_IBF(total_size*BETA, k, 6);
-    Strata_IBF* strata2 = new Strata_IBF(total_size*BETA, k, 6);
+
+    auto strata1 = new Strata_IBF(BETA, NUM_HASHES, logu);
+    auto strata2 = new Strata_IBF(BETA, NUM_HASHES, logu);
+
     strata1->encode(A, Hc);
     strata2->encode(B, Hc);
+
     int d = strata1->estimateLength(strata2, Hc);
     cout<<"Estimated Set Diff Size: "<<d<<endl;
 
     if(d) {
-        int N = d * ALPHA;
+        int N = (int)((float)d * ALPHA);
         cout<< "N: "<<N<<endl;
         cout << "Calculating Set Difference ...\n";
-        vector<unordered_set<int>> setDiff = getSetDifference(A, B, N, k, Hc);
+        vector<unordered_set<int>> setDiff = getSetDifference(A, B, N, NUM_HASHES, Hc);
         cout << "---- SET DIFFERENCE A-B ----\n";
         for (int x : setDiff[0]) {
             cout << x << endl;
