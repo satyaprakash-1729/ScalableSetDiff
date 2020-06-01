@@ -3,6 +3,15 @@
 using namespace std;
 typedef int (*hashFuncType)(int, int);
 
+
+#ifndef ALPHA
+    #define ALPHA 1.5
+#endif
+
+#ifndef BETA
+    #define BETA 2
+#endif
+
 class IBFCell{
     int idSum;
     int hashSum;
@@ -287,17 +296,16 @@ int main(int argc, char *argv[]) {
     hashFuncType Hc = &hashFunctionC;
     int total_size = A.size() + B.size();
     cout<<"Calculating estimated set difference size...\n";
-    Strata_IBF* strata1 = new Strata_IBF(total_size*2, k, 6);
-    Strata_IBF* strata2 = new Strata_IBF(total_size*2, k, 6);
+    Strata_IBF* strata1 = new Strata_IBF(total_size*BETA, k, 6);
+    Strata_IBF* strata2 = new Strata_IBF(total_size*BETA, k, 6);
     strata1->encode(A, Hc);
     strata2->encode(B, Hc);
     int d = strata1->estimateLength(strata2, Hc);
     cout<<"Estimated Set Diff Size: "<<d<<endl;
 
     if(d) {
-        float alpha = 1.5;
-
-        int N = d * alpha;
+        int N = d * ALPHA;
+        cout<< "N: "<<N<<endl;
         cout << "Calculating Set Difference ...\n";
         vector<unordered_set<int>> setDiff = getSetDifference(A, B, N, k, Hc);
         cout << "---- SET DIFFERENCE A-B ----\n";
