@@ -10,6 +10,7 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <set>
 
 using namespace std;
 
@@ -26,6 +27,7 @@ private:
             return false;
         get_hashes(&(this->id_sum[ind]),out);
         
+        
         return (out[0] == this->hash_sum[ind]);
     }
     
@@ -34,10 +36,26 @@ private:
     }
 
     void get_indices(void* key, uint32_t out[]){
-        get_hashes(key,out);
-        for(int i = 1; i < 4; i++){
-            out[i] = out[i]%this->size;
+        uint32_t t[4];
+        get_hashes(key,t);
+        uint32_t hash = t[0];
+        set<uint32_t> dist_indices;
+        while(dist_indices.size() < 3){
+            uint32_t k = t[0];
+            for(int i = 1; i < 4; i++){
+                dist_indices.insert(t[i]%this->size);
+                if(dist_indices.size() == 3)
+                    break;
+            }
+            get_hashes(&k, t);
         }
+        
+        int i = 1;
+        for(auto ind : dist_indices){
+            out[i] = ind;
+            i++;
+        }
+        out[0] = hash;
     }
     
 
@@ -72,11 +90,13 @@ public:
     void add_key(void* key){
         uint32_t out[4];
         get_indices(key,out);
+        
         for(int i = 1; i < 4; i++){
             this->count[out[i]]++;
             this->id_sum[out[i]] ^= ((uint32_t*)key)[0];
             this->hash_sum[out[i]] ^= out[0];
         }
+    
     }
 
     void encode(vector<int> arr){
@@ -106,13 +126,14 @@ public:
 
             get_indices(&id,out);
             int c = this->count[ind];
-            for(int i = 1; i < 4; i++){
-                this->hash_sum[out[i]] ^= hashSum;
-                this->count[out[i]] -= c;
-                this->id_sum[out[i]] ^= id;
+            set<uint32_t> outset(out+1,out+4);
+            for(auto p : outset){
+                this->hash_sum[p] ^= hashSum;
+                this->count[p] -= c;
+                this->id_sum[p] ^= id;
 
-                if(this->is_pure((uint)out[i]))
-                    pureList.push(out[i]);
+                if(this->is_pure((uint)p))
+                    pureList.push(p);
 
             }
         }
@@ -150,13 +171,15 @@ public:
             get_indices(&id,out);
             int c = this->count[ind];
             
-            for(int i = 1; i < 4; i++){
-                this->hash_sum[out[i]] ^= hashSum;
-                this->count[out[i]] -= c;
-                this->id_sum[out[i]] ^= id;
+            set<uint32_t> outset(out+1,out+4);
+            
+            for(auto p : outset){
+                this->hash_sum[p] ^= hashSum;
+                this->count[p] -= c;
+                this->id_sum[p] ^= id;
 
-                if(this->is_pure((uint)out[i]))
-                    pureList.push(out[i]);
+                if(this->is_pure((uint)p))
+                    pureList.push(p);
 
             }
         }
@@ -253,8 +276,12 @@ public:
 
 int main(){
     
-    vector<int> v1{1,2,3,4,5,6,7,8,9,10};
-    vector<int> v2{112,88,67,43,89,75,7,52,32,59};
+//    vector<int> v1{1,2,3,4,5,6,7,8,9,10};
+//    vector<int> v2{112,88,67,43,89,75,7,52,32,59};
+    
+    vector<int> v1{1, 6, 0, 2, 4, 12, 5, 7, 32};
+    vector<int> v2{11, 6, 90, 21, 4, 12, 65, 7, 31};
+
 
 //    for(int i = 0; i < 10; i++){
 //        v1.push_back(i);
@@ -267,8 +294,8 @@ int main(){
     
     vector<vector<int>> ans(2);
 
-    Strata_IBF* sibf1 = new Strata_IBF(80,4,7);
-    Strata_IBF* sibf2 = new Strata_IBF(80,4,7);
+    Strata_IBF* sibf1 = new Strata_IBF(80,4,32);
+    Strata_IBF* sibf2 = new Strata_IBF(80,4,32);
 
     sibf1->encode(v1);
     sibf2->encode(v2);
@@ -281,8 +308,8 @@ int main(){
     
     IBF *ibf1, *ibf2;
     
-    ibf1 = new IBF(100,4);
-    ibf2 = new IBF(100,4);
+    ibf1 = new IBF(3*c,4);
+    ibf2 = new IBF(3*c,4);
     ibf1->encode(v1);
     ibf2->encode(v2);
     
