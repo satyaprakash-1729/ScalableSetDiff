@@ -12,45 +12,30 @@
 //#define BUFSIZE 100
 #define PORT 9998
 
-//receives the message
-/*string getMessage(int connection){
-    // Vars
-    char buffer[BUFSIZE];
-    string recvd = "";
-    int bytes_read;
-
-    while ((bytes_read =  recv(connection, buffer, BUFSIZE, 0)) > 0){
-
-        if (bytes_read < 4){
-            break;
-        }
-
-        if (bytes_read < BUFSIZE){
-            buffer[bytes_read] = 0;
-        }
-
-        recvd = recvd + string(buffer);
-
-        //end of one message
-        if (recvd.substr(recvd.size()-4, 4) == "\r\n\r\n" ){
-            break;
-        }
-    }
-
-    return recvd;
-}*/
 
 int main (int argc, char *argv[]) {
     //unordered_set<int> A = {40,12,59,32,74,32,52,7,89,43,75,67,88,112};
     //unordered_set<int> A = {159, 100, 281, 171, 270, 137, 183, 119, 163, 260, 283};
-    unordered_set<int> A = getRandomSet(11, 100, 300);
+    //unordered_set<int> A = getRandomSet(11, 100, 300);
+    unordered_set<int> A;
 
-    /*vector<hashFuncType> hashes;
-    hashes.push_back(hashFunction1);
-    hashes.push_back(hashFunction2);
-    hashes.push_back(hashFunction3);
-    */
-   
+    ifstream ifs;
+    ifs.open("test_files/host1.data", ios::binary);
+
+    hash<string> hash_func;
+
+    string buf;
+    int i = 0;
+    while(getline(ifs, buf)){
+        int temp = hash_func (buf);
+        A.insert(temp);
+    }
+
+    cout << "file hashes\n";
+    for (int j : A) {cout << j << endl;}
+    cout << "num hashes: " << A.size() << endl;
+
+
     //create a socket
     int client_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (client_sock == -1) {
@@ -109,9 +94,9 @@ int main (int argc, char *argv[]) {
         else if (curr_state == SEND_LOGU && recvd != "" ){
             //parse for logu2
             //size_t end = recvd.find("\r\n\r\n");
-            cerr << "before logu2 received\n"; 
+            //cerr << "before logu2 received\n"; 
             int logu2 = stoi(recvd);
-            cerr << "after logu2 received\n";
+            //cerr << "after logu2 received\n";
    
             //calculate logu
             logu = (int) (log(max(logu1, logu2))/log(2)) + 1;
@@ -131,8 +116,8 @@ int main (int argc, char *argv[]) {
                 msg = msg + "\r\n";
             }
             msg = msg + "\r\n";
-            cerr << "encoded strata1 sent\n" << msg << endl;
-            cerr << "msg length: " << msg.size() << endl;
+            //cerr << "encoded strata1 sent\n" << msg << endl;
+            //cerr << "msg length: " << msg.size() << endl;
             send(client_sock, msg.c_str() , msg.size(), 0 );
 
             curr_state = ESTIMATE_DIFF_SIZE;
@@ -160,19 +145,19 @@ int main (int argc, char *argv[]) {
                 j=0;
             }
 
-            cerr << "reconstructed strata2 \n";
+            /*cerr << "reconstructed strata2 \n";
             for (auto row : strata2->ibfs){
                for (auto column : row){
                    cerr << column->getIdSum() << "," << column->getHashSum() << "," << column->getCount() << "\t";
                }
                cerr << endl;
-            }
+            }*/
 
             //estimated diff size
             int d = strata1->estimateLength(strata2, Hc);
             cout<<"Estimated Set Diff Size: "<<d<<endl;
             estimated_diff_size = d;
-            estimated_diff_size = 35;
+            estimated_diff_size = 100;
 
             //encode and send ibf1
             float alpha = ALPHA;
@@ -190,8 +175,8 @@ int main (int argc, char *argv[]) {
                msg = msg + to_string(cell->getIdSum()) + "\t" +  to_string(cell->getHashSum()) + "\t" + to_string(cell->getCount()) + "\t\r\n";
             }
             msg = msg + "\r\n";
-            cerr << "encoded ibf vector sent" << msg << endl;
-            cerr << "msg length: " << msg.size() << endl;
+            //cerr << "encoded ibf vector sent" << msg << endl;
+            //cerr << "msg length: " << msg.size() << endl;
             send(client_sock, msg.c_str() , msg.size(), 0 );
   
             curr_state = CALCULATE_SET_DIFF;
@@ -300,10 +285,10 @@ int main (int argc, char *argv[]) {
                 i++;
             }
 
-            cout << "reconstructed ibf2\n";
+            /*cout << "reconstructed ibf2\n";
             for (IBFCell * cell : ibf2){
                 cout<< to_string(cell->getIdSum()) + "\t" +  to_string(cell->getHashSum()) + "\t" + to_string(cell->getCount()) + "\t\r\n";
-            }
+            }*/
 
             //calculate set diff           
             //calculate set difference
@@ -315,27 +300,28 @@ int main (int argc, char *argv[]) {
 
             decode(diff, diff_A_B, diff_B_A, k, Hc, N);
 
-            unordered_set<int> ans;
+            /*unordered_set<int> ans;
             ans.insert(diff_A_B.begin(), diff_A_B.end());
             ans.insert(diff_B_A.begin(), diff_B_A.end());
+            */
 
-            cout<<"---- SET DIFFERENCE ----\n";
-            for(int x : ans){
+            cout<<"---- CALCULATED SET DIFFERENCE ----\n";
+            /*for(int x : ans){
                 cout<<x<<endl;
-            }
-                cerr << "---- diff_A_B ----\n";
-                cerr << "size of diff_A_B" << diff_A_B.size() << endl;
+            }*/
+                cerr << "\n---- diff_A_B ----\n";
+                cerr << "size of diff_A_B: " << diff_A_B.size() << endl;
                 for(int x : diff_A_B){
                     cout<<x<<", ";
                 }
                 cout << endl;
 
-                cerr << "---- diff_B_A ----\n";
-                cerr << "size of diff_B_A" << diff_B_A.size() << endl;
+                cerr << "\n---- diff_B_A ----\n";
+                cerr << "size of diff_B_A: " << diff_B_A.size() << endl;
                 for(int x : diff_B_A){
                     cout<<x<<", ";
                 }
-                cout << endl;
+                cout << endl << endl;
 
                 curr_state = CALCULATE_ACTUAL_DIFF;
 
@@ -349,7 +335,7 @@ int main (int argc, char *argv[]) {
 
         }
         else if (curr_state == CALCULATE_ACTUAL_DIFF && recvd != ""){
-        cerr << "\n\n---- ACTUAL DIFFERENCE ----" << endl;
+        cerr << "\n---- ACTUAL SET DIFFERENCE ----\n";
                 //parse set B
                 unordered_set<int> B;
                 unordered_set<int> diff;
@@ -367,15 +353,15 @@ int main (int argc, char *argv[]) {
                 for(int x: A) if(!B.count(x)){diff_A_B.insert(x);}
                 for(int x: B) if(!A.count(x)){diff_B_A.insert(x);}
 
-                cerr << "---- diff_A_B ----\n";
-                cerr << "size of diff_A_B" << diff_A_B.size() << endl;
+                cerr << "\n---- diff_A_B ----\n";
+                cerr << "size of diff_A_B: " << diff_A_B.size() << endl;
                 for(int x : diff_A_B){
                     cout<<x<<", ";
                 }
                 cout<< endl;
 
-                cerr << "---- diff_B_A ----\n";
-                cerr << "size of diff_B_A" << diff_B_A.size() << endl;
+                cerr << "\n---- diff_B_A ----\n";
+                cerr << "size of diff_B_A: " << diff_B_A.size() << endl;
                 for(int x : diff_B_A){
                     cout<<x<<", ";
                 }
@@ -387,7 +373,7 @@ int main (int argc, char *argv[]) {
 
         
         recvd = getMessage(client_sock);
-        cout << "Message recevied: " << recvd << endl;
+        //cout << "Message recevied: " << recvd << endl;
         if (recvd.size() == 0){
             break;
         }
