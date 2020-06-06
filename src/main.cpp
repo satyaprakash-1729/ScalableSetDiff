@@ -5,11 +5,11 @@ typedef int (*hashFuncType)(int, int);
 
 
 #ifndef ALPHA
-    #define ALPHA 1.5
+    #define ALPHA 4
 #endif
 
 #ifndef BETA
-    #define BETA 2
+    #define BETA 80
 #endif
 
 #ifndef NUM_HASHES
@@ -215,7 +215,8 @@ public:
     void encode(unordered_set<int>& numSet, hashFuncType Hc){
         for(int num: numSet){
             vector<int> idxs = getDiffHashedInd(num, this->numHashes, this->ibfSize);
-            int trails = getNumTrailingZeros(Hc(num, INT_MAX));
+            int hashed = Hc(num, (int)(1<<this->logu));
+            int trails = getNumTrailingZeros(hashed);
             for(int idx: idxs){
                 this->ibfs[trails][idx]->addEntry(num, Hc(num, this->ibfSize));
             }
