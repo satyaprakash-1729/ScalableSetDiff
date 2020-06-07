@@ -17,27 +17,39 @@ vector<IBFCell*> ibf1;
 vector<IBFCell*> ibf2;
 
 int main (int argc, char *argv[]) {
+    if (argc < 2){
+        cerr << "please enter file name -- ./SERVER /path/to/filename\n";
+    }
+
     int sockopt = 1;
 
     //unordered_set<int> B = getRandomSet(11, 100, 300);
     unordered_set<int> B;
 
     ifstream ifs;
-    ifs.open("test_files/host2.data", ios::binary);
+    //ifs.open("test_files/host2.data", ios::binary);
+    //ifs.open("test_files/dataset2.dat", ios::binary);
+    ifs.open(argv[1], ios::binary);
 
     hash<string> hash_func;
+    int hashes = 0;
 
+    cout << "reading file hashes\n";
     string buf;
     int i = 0;
     while(getline(ifs, buf)){
         int temp = hash_func (buf); 
-        B.insert(temp);        
+        if (B.find(temp) != B.end()){
+            cerr << temp << " repeated!\n";
+        }
+        B.insert(temp);       
+        
+        hashes++; 
     }
 
-    cout << "file hashes\n";
-    for (int j : B) {cout << j << endl;}
+    //for (int j : B) {cout << j << endl;}
     cout << "num hashes: " << B.size() << endl;
-  
+    cout << "num hashes read: " << hashes << endl;
     //create a socket
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock == -1) {
@@ -96,6 +108,7 @@ int main (int argc, char *argv[]) {
         
         Strata_IBF * strata2;
 
+        unordered_set<int> ans;
 
         //loop here to exchange messages
         while(1){
@@ -319,10 +332,10 @@ int main (int argc, char *argv[]) {
                     cout<<"Error finding difference... All differences might not be recorded.\n";
                 }
 
-                /*unordered_set<int> ans;
+                
                 ans.insert(diff_A_B.begin(), diff_A_B.end());
                 ans.insert(diff_B_A.begin(), diff_B_A.end());
-                */
+                
 
                 //cerr<<"set diff size: " << ans.size() << endl;
                 cerr<<"\n---- CALCULATED SET DIFFERENCE ----\n";
@@ -349,27 +362,43 @@ int main (int argc, char *argv[]) {
             }
 
             else if (curr_state == CALCULATE_ACTUAL_DIFF && recvd != ""){
-                cerr << "\n---- ACTUAL SET DIFFERENCE ----\n";
+                cerr << "\n---- NAIVE SET DIFFERENCE ----\n";
                 //parse set A
                 unordered_set<int> A;
                 unordered_set<int> diff;
                 vector<string> elements;
                 split(recvd, "\r\n", elements);
+                cerr << "parsing set "  << endl;
 
                 for(string s: elements){
                     if (s == ""){continue;}
                     A.insert(stoi(s));
+                    //cerr << "parsed " << s << endl;
                 }
+                cerr << "set parsed\n" << "size is: " << A.size() << endl;
  
                 //send set B
                 msg = "";
+                int i = 0;
+                int j = 0; 
+
+                
                 for (int x : B){
                     msg = msg + to_string(x) + "\r\n";
+                    i++;
+
+                    if ( i == 100000){
+                        send(connection, msg.c_str() , msg.size(), 0 );
+                        i = 0;
+                        msg = "";
+                        j++;
+                        cerr << "sent " << j*100000 << endl;
+                    }
                 }
                 msg = msg + "\r\n";
                 //cerr << "encoded strata2 vector sent\n" << msg << endl;
                 send(connection, msg.c_str() , msg.size(), 0 );
- 
+
                 unordered_set<int> diff_A_B;
                 unordered_set<int> diff_B_A;
                 
@@ -390,7 +419,12 @@ int main (int argc, char *argv[]) {
                 }
                 cout << endl << endl;
 
+                unordered_set<int> actual_ans;
+                actual_ans.insert(diff_A_B.begin(), diff_A_B.end());
+                actual_ans.insert(diff_B_A.begin(), diff_B_A.end());
+                
 
+                cerr << "both methods are equal: " << (actual_ans == ans) ? "true" : "false" << endl;                
             }
 
         }

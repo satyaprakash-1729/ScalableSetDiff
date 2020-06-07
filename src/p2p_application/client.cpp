@@ -19,11 +19,18 @@ int main (int argc, char *argv[]) {
     //unordered_set<int> A = getRandomSet(11, 100, 300);
     unordered_set<int> A;
 
+    if (argc < 2){
+        cerr << "please enter file name -- ./SERVER /path/to/filename\n";
+    }
+
+
     ifstream ifs;
-    ifs.open("test_files/host1.data", ios::binary);
+    //ifs.open("test_files/host1.data", ios::binary);
+    //ifs.open("test_files/dataset1.dat", ios::binary);
+    ifs.open(argv[1], ios::binary);
 
     hash<string> hash_func;
-
+    cout << "reading file hashes\n";
     string buf;
     int i = 0;
     while(getline(ifs, buf)){
@@ -31,8 +38,7 @@ int main (int argc, char *argv[]) {
         A.insert(temp);
     }
 
-    cout << "file hashes\n";
-    for (int j : A) {cout << j << endl;}
+    //for (int j : A) {cout << j << endl;}
     cout << "num hashes: " << A.size() << endl;
 
 
@@ -327,12 +333,24 @@ int main (int argc, char *argv[]) {
 
                 //send actual set A
                 msg = "";
+                i = 0;
+                int j = 1;
                 for (int x : A){
                     msg = msg + to_string(x) + "\r\n";
+                    i++;
+
+                    //cerr << "inserted " << x << endl;
+                    if ( i == 100000){
+                        send(client_sock, msg.c_str(), msg.size(), 0);
+                        i = 0;
+                        msg = "";
+                        cerr << "sent " << 100000*j << endl;
+                        j++;
+                    }
                 }
                 msg = msg + "\r\n";
                 send(client_sock, msg.c_str() , msg.size(), 0 );
-
+                cerr << "finished sending\n";
         }
         else if (curr_state == CALCULATE_ACTUAL_DIFF && recvd != ""){
         cerr << "\n---- ACTUAL SET DIFFERENCE ----\n";
@@ -341,11 +359,12 @@ int main (int argc, char *argv[]) {
                 unordered_set<int> diff;
                 vector<string> elements;
                 split(recvd, "\r\n", elements);
-
+                cerr << "parsing set " << endl;
                 for(string s: elements){
                     if (s == ""){continue;}
                     B.insert(stoi(s));
-                }
+                                    }
+                cerr << "finished parsing\n" << "set size: " << B.size() << endl;
 
                 unordered_set<int> diff_A_B;
                 unordered_set<int> diff_B_A;

@@ -3,12 +3,20 @@
 //receives the message
 string getMessage(int connection){
     // Vars
-    char buffer[BUFSIZE+1];
+    char buffer[BUFSIZE+5];
     buffer[BUFSIZE] = 0;
     string recvd = "";
     int bytes_read;
 
+    cerr << "--waiting to receive message--\n";
+
+    bool printed = false;
     while ((bytes_read =  recv(connection, buffer, BUFSIZE, 0)) > 0){
+
+        if (!printed) {
+           printed = true;
+           cerr << "--receiving message--";
+        }
 
         if (bytes_read < 4){
             break;
@@ -25,6 +33,7 @@ string getMessage(int connection){
 
         //end of one message
         if (recvd.substr(recvd.size()-4, 4) == "\r\n\r\n" ){
+            cerr << "--message received--\n";
             break;
         }
     }
