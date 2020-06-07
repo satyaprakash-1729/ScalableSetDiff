@@ -20,7 +20,7 @@ int main (int argc, char *argv[]) {
     unordered_set<int> A;
 
     if (argc < 2){
-        cerr << "please enter file name -- ./SERVER /path/to/filename\n";
+        cerr << "please enter file name -- ./CLIENT /path/to/filename\n";
     }
 
 
