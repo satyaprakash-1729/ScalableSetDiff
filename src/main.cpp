@@ -5,11 +5,11 @@ typedef int (*hashFuncType)(int, int);
 
 
 #ifndef ALPHA
-    #define ALPHA 1.5
+    #define ALPHA 4
 #endif
 
 #ifndef BETA
-    #define BETA 2
+    #define BETA 80
 #endif
 
 #ifndef NUM_HASHES
@@ -201,18 +201,22 @@ public:
 
     static int getNumTrailingZeros(int x){
         if(!x) return 0;
-        int ans = 0;
-        while(!x%2){
-            x = x>>1;
-            ans++;
-        }
-        return ans;
+        int mask = 1;
+        int i = 0;
+	    while (mask <= x){
+	        if ((x & mask) != 0)
+	            return i;
+	        i++;
+	        mask = mask<<1;
+	    }
+        return i;
     }
 
     void encode(unordered_set<int>& numSet, hashFuncType Hc){
         for(int num: numSet){
             vector<int> idxs = getDiffHashedInd(num, this->numHashes, this->ibfSize);
-            int trails = getNumTrailingZeros(num);
+            int hashed = Hc(num, (int)(1<<this->logu));
+            int trails = getNumTrailingZeros(hashed);
             for(int idx: idxs){
                 this->ibfs[trails][idx]->addEntry(num, Hc(num, this->ibfSize));
             }
@@ -240,8 +244,8 @@ int main(int argc, char *argv[]) {
     unordered_set<int> A;
     unordered_set<int> B;
 
-    A = getRandomSet(11, 100, 300);
-    B = getRandomSet(11, 100, 300);
+    A = getRandomSet(6, 100, 300);
+    B = getRandomSet(6, 100, 300);
 
     cout << "ALPHA: " << ALPHA << " BETA: " << BETA << " NUM HASHES: " << NUM_HASHES << endl;
     printSet("A", A);
