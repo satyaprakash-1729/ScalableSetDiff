@@ -17,11 +17,14 @@ vector<IBFCell*> ibf1;
 vector<IBFCell*> ibf2;
 
 int main (int argc, char *argv[]) {
-    if (argc < 2){
-        cerr << "please enter file name -- ./SERVER /path/to/filename\n";
+    if (argc < 3){
+        cerr << "please enter all arguments -- ./SERVER /path/to/filename mode\n";
+        return -1;
     }
 
+
     int sockopt = 1;
+    string mode (argv[2]);
 
     //unordered_set<int> B = getRandomSet(11, 100, 300);
     unordered_set<int> B;
@@ -124,9 +127,13 @@ int main (int argc, char *argv[]) {
 
             if (curr_state == INITIAL && recvd == "Host 1 Hello\r\n\r\n" ){
                 msg = "Host 2 Hello\r\n\r\n";
-                curr_state = SEND_LOGU;
                 send(connection, msg.c_str(), msg.size(), 0);
-                cerr << "logu sent\n";
+                cerr << "host2 hello sent\n";
+                if (mode == "naive"){
+                    curr_state = CALCULATE_ACTUAL_DIFF;
+                } else{
+                    curr_state = SEND_LOGU;
+                }
             }
             
             else if (curr_state == SEND_LOGU && recvd != ""){
@@ -358,7 +365,14 @@ int main (int argc, char *argv[]) {
                 }
                 cout << endl << endl;
 
-                curr_state = CALCULATE_ACTUAL_DIFF; 
+                if (mode == "both"){
+                    curr_state = CALCULATE_ACTUAL_DIFF; 
+                } 
+ 
+                else if (mode == "IBF"){
+                    return 0;
+                }
+                
             }
 
             else if (curr_state == CALCULATE_ACTUAL_DIFF && recvd != ""){
@@ -378,7 +392,8 @@ int main (int argc, char *argv[]) {
                 cerr << "set parsed\n" << "size is: " << A.size() << endl;
  
                 //send set B
-                msg = "";
+                send_set(connection, B);
+                /*msg = "";
                 int i = 0;
                 int j = 0; 
 
@@ -396,8 +411,10 @@ int main (int argc, char *argv[]) {
                     }
                 }
                 msg = msg + "\r\n";
+
                 //cerr << "encoded strata2 vector sent\n" << msg << endl;
                 send(connection, msg.c_str() , msg.size(), 0 );
+                */
 
                 unordered_set<int> diff_A_B;
                 unordered_set<int> diff_B_A;
@@ -423,8 +440,10 @@ int main (int argc, char *argv[]) {
                 actual_ans.insert(diff_A_B.begin(), diff_A_B.end());
                 actual_ans.insert(diff_B_A.begin(), diff_B_A.end());
                 
-
-                cerr << "both methods are equal: " << (actual_ans == ans) ? "true" : "false" << endl;                
+                if (mode == "both"){
+                    cerr << "both methods are equal: " << ((actual_ans == ans) ? "true" : "false") << endl;         
+                }       
+                return 0;
             }
 
         }

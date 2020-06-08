@@ -56,3 +56,28 @@ void split(string recvd, string delim,vector<string>& substrings){
         curr_index = recvd.find(delim, prev_index);
     }
 }
+
+void send_set(int connection, unordered_set<int>& S  ){
+                //send set
+                string msg = "";
+                int i = 0;
+                int j = 1;
+                for (int x : S){
+                    msg = msg + to_string(x) + "\r\n";
+                    i++;
+
+                    //cerr << "inserted " << x << endl;
+                    if ( i == 100000){
+                        send(connection, msg.c_str(), msg.size(), 0);
+                        i = 0;
+                        msg = "";
+                        cerr << "sent " << 100000*j << endl;
+                        j++;
+                    }
+                }
+                msg = msg + "\r\n";
+                send(connection, msg.c_str() , msg.size(), 0 );
+                cerr << "finished sending\n";
+
+}
+

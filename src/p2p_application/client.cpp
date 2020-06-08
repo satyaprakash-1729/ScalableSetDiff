@@ -12,18 +12,18 @@
 //#define BUFSIZE 100
 #define PORT 9998
 
-
 int main (int argc, char *argv[]) {
     //unordered_set<int> A = {40,12,59,32,74,32,52,7,89,43,75,67,88,112};
     //unordered_set<int> A = {159, 100, 281, 171, 270, 137, 183, 119, 163, 260, 283};
     //unordered_set<int> A = getRandomSet(11, 100, 300);
     unordered_set<int> A;
 
-    if (argc < 2){
-        cerr << "please enter file name -- ./CLIENT /path/to/filename\n";
+    if (argc < 3){
+        cerr << "please enter all arguments -- ./CLIENT /path/to/filename mode\n";
+        return -1;
     }
 
-
+    string mode (argv[2]);    
     ifstream ifs;
     //ifs.open("test_files/host1.data", ios::binary);
     //ifs.open("test_files/dataset1.dat", ios::binary);
@@ -90,11 +90,17 @@ int main (int argc, char *argv[]) {
         }
         
         else if (curr_state == INITIAL && recvd == "Host 2 Hello\r\n\r\n"){
-           //send logu1
-           msg = to_string(logu1) + "\r\n\r\n";
-           send(client_sock , msg.c_str() , msg.size(), 0 );
-           curr_state = SEND_LOGU;
-           cerr << "logu sent\n";
+           if (mode == "naive"){
+               send_set(client_sock, A);
+               curr_state = CALCULATE_ACTUAL_DIFF;
+           }
+           else { //mode == IBF or both
+               //send logu1
+               msg = to_string(logu1) + "\r\n\r\n";
+               send(client_sock , msg.c_str() , msg.size(), 0 );
+               curr_state = SEND_LOGU;
+               cerr << "logu sent\n";
+           }
         }
 
         else if (curr_state == SEND_LOGU && recvd != "" ){
@@ -329,10 +335,14 @@ int main (int argc, char *argv[]) {
                 }
                 cout << endl << endl;
 
-                curr_state = CALCULATE_ACTUAL_DIFF;
+                if (mode == "IBF"){
+                    return 0;
+                }
 
+                curr_state = CALCULATE_ACTUAL_DIFF;
+                send_set(client_sock, A);
                 //send actual set A
-                msg = "";
+                /*msg = "";
                 i = 0;
                 int j = 1;
                 for (int x : A){
@@ -350,10 +360,10 @@ int main (int argc, char *argv[]) {
                 }
                 msg = msg + "\r\n";
                 send(client_sock, msg.c_str() , msg.size(), 0 );
-                cerr << "finished sending\n";
+                cerr << "finished sending\n";*/
         }
         else if (curr_state == CALCULATE_ACTUAL_DIFF && recvd != ""){
-        cerr << "\n---- ACTUAL SET DIFFERENCE ----\n";
+        cerr << "\n---- NAIVE SET DIFFERENCE ----\n";
                 //parse set B
                 unordered_set<int> B;
                 unordered_set<int> diff;
@@ -387,7 +397,7 @@ int main (int argc, char *argv[]) {
                 
                 cout<<endl;
 
-
+                return 0;
         }
 
         
