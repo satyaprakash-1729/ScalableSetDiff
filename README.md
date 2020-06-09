@@ -2,6 +2,11 @@
 
 see main.cpp for some data sets for testing
 
+to run the basic set difference run:
+1. from build folder --> cmake .. --> make IBFSetDiff
+2. ./IBFSetDiff --alpha 4 --beta 80 --num_hashes 3 --file1path path1 --file2path path2
+3. Or for a random list ./IBFSetDiff --alpha 4 --beta 80 --num_hashes 3 --set1size 10 --set2size 10
+
 To run the p2p application:
 1. use cmake and make to build CLIENT and SERVER. I used ALPHA=20 BETA=10 and NUM_HAHES=3 for cmake.
 2. run "./SERVER path/to/file_name mode" first, and then "./CLIENT path/to/filename mode" after.

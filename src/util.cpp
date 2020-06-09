@@ -23,9 +23,10 @@ void printSet(const std::string& name, std::unordered_set<int>& A){
 std::unordered_set<int> getDatasetFromFile(const std::string& filename){
     std::unordered_set<int> ans;
     std::ifstream fin(filename);
-    int num;
-    while(fin>>num){
-        ans.insert(num);
+    std::string line;
+    std::hash<std::string> h;
+    while(getline(fin,line)){
+        ans.insert(h(line));
     }
     return ans;
 }
