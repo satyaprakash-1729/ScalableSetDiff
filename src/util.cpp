@@ -19,3 +19,13 @@ void printSet(const std::string& name, std::unordered_set<int>& A){
     }
     std::cout<<std::endl;
 }
+
+std::unordered_set<int> getDatasetFromFile(const std::string& filename){
+    std::unordered_set<int> ans;
+    std::ifstream fin(filename);
+    int num;
+    while(fin>>num){
+        ans.insert(num);
+    }
+    return ans;
+}

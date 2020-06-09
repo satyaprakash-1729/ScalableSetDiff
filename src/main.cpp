@@ -16,6 +16,14 @@ typedef int (*hashFuncType)(int, int);
     #define NUM_HASHES 3
 #endif
 
+#ifndef SET1_SIZE
+    #define SET1_SIZE 10
+#endif
+
+#ifndef SET2_SIZE
+    #define SET2_SIZE 10
+#endif
+
 class IBFCell{
     int idSum;
     int hashSum;
@@ -240,16 +248,76 @@ public:
     }
 };
 
+void parseAndPopulate(int argc, char *argv[], int& alpha, int& beta, int& num_hashes,
+                        int& set1size, int& set2size, string& file1path,
+                        string& file2path, bool& verbose){
+    for(int i=1; i<argc; i++){
+        if(string(argv[i]) == "--beta"){
+            beta = stoi(string(argv[i+1]));
+        }
+        else if(string(argv[i]) == "--alpha"){
+            alpha = stoi(string(argv[i+1]));
+        }
+        else if(string(argv[i]) == "--num_hashes"){
+            num_hashes = stoi(string(argv[i+1]));
+        }
+        else if(string(argv[i]) == "--set1size"){
+            set1size = stoi(string(argv[i+1]));
+        }
+        else if(string(argv[i]) == "--set2size"){
+            set2size = stoi(string(argv[i+1]));
+        }
+        else if(string(argv[i]) == "--file1path"){
+            file1path = string(argv[i+1]);
+        }
+        else if(string(argv[i]) == "--file2path"){
+            file2path = string(argv[i+1]);
+        }
+        else if(string(argv[i]) == "--verbose"){
+            verbose = true;
+            i--;
+        }
+        else{
+            cout<<"Usage: ./IBFSetDiff --beta BETA --alpha ALPHA --num_hashes NUM_HASHES --file1path path --file2path path --set1size size --set2size size --verbose\n";
+            exit(1);
+        }
+        i++;
+    }
+}
+
 int main(int argc, char *argv[]) {
+    int alpha = ALPHA;
+    int beta = BETA;
+    int num_hashes = NUM_HASHES;
+    int set1size = SET1_SIZE;
+    int set2size = SET2_SIZE;
+    bool verbose = false;
+    string file1path = "";
+    string file2path = "";
+
+    if(argc==2){
+        string arg1 = string(argv[1]);
+        if(arg1=="--help")
+            cout<<"Usage: ./IBFSetDiff --beta BETA --alpha ALPHA --num_hashes NUM_HASHES --file1path path --file2path path --set1size size --set2size size --verbose\n";
+        return 1;
+    }
+    parseAndPopulate(argc, argv, alpha, beta, num_hashes, set1size, set2size, file1path, file2path, verbose);
+
     unordered_set<int> A;
     unordered_set<int> B;
 
-    A = getRandomSet(6, 100, 300);
-    B = getRandomSet(6, 100, 300);
-
-    cout << "ALPHA: " << ALPHA << " BETA: " << BETA << " NUM HASHES: " << NUM_HASHES << endl;
-    printSet("A", A);
-    printSet("B", B);
+    if(file1path=="" || file2path==""){
+        A = getRandomSet(set1size, 10000, 90000);
+        B = getRandomSet(set2size, 10000, 90000);
+    }else{
+        A = getDatasetFromFile(file1path);
+        B = getDatasetFromFile(file2path);
+    }
+    if(verbose){
+        cout << "ALPHA: " << alpha << " BETA: " << beta << " NUM_HASHES: " << num_hashes << endl;
+        printSet("A", A);
+        printSet("B", B);
+    }
 
     /* //These two data sets produce an incorrect set difference
     unordered_set<int> A = {40,12,59,32,74,32,52,7,89,43,75,67,88,112};
@@ -305,30 +373,35 @@ int main(int argc, char *argv[]) {
     unordered_set <int> A {-1,0,1,2,3,4,5};
     unordered_set <int> B {0,1,2,3,4,5,6};
     */
-
+    const clock_t begin_time = clock();
     hashFuncType Hc = &hashFunctionC;
-//    int total_size = (int)(A.size() + B.size());
+
     int logu1 = *max_element(A.begin(), A.end());
     int logu2 = *max_element(B.begin(), B.end());
     int logu = (int)(log(max(logu1, logu2)) / log(2))+1;
 
-    cout<<"LOGU: "<<logu<<endl;
-    cout<<"Calculating estimated set difference size...\n";
+    if(verbose){
+        cout<<"LOGU: "<<logu<<endl;
+        cout<<"Calculating estimated set difference size...\n";
+    }
 
-    auto strata1 = new Strata_IBF(BETA, NUM_HASHES, logu);
-    auto strata2 = new Strata_IBF(BETA, NUM_HASHES, logu);
+    auto strata1 = new Strata_IBF(beta, num_hashes, logu);
+    auto strata2 = new Strata_IBF(beta, num_hashes, logu);
 
     strata1->encode(A, Hc);
     strata2->encode(B, Hc);
 
     int d = strata1->estimateLength(strata2, Hc);
-    cout<<"Estimated Set Diff Size: "<<d<<endl;
+    if(verbose)
+        cout<<"Estimated Set Diff Size: "<<d<<endl;
 
     if(d) {
-        int N = (int)((float)d * ALPHA);
-        cout<< "N: "<<N<<endl;
-        cout << "Calculating Set Difference ...\n";
-        vector<unordered_set<int>> setDiff = getSetDifference(A, B, N, NUM_HASHES, Hc);
+        int N = (int)((float)d * alpha);
+        if(verbose){
+            cout<< "N: "<<N<<endl;
+            cout << "Calculating Set Difference ...\n";
+        }
+        vector<unordered_set<int>> setDiff = getSetDifference(A, B, N, num_hashes, Hc);
         cout << "---- SET DIFFERENCE A-B ----\n";
         for (int x : setDiff[0]) {
             cout << x << endl;
@@ -337,10 +410,12 @@ int main(int argc, char *argv[]) {
         for (int x : setDiff[1]) {
             cout << x << endl;
         }
+        cout<<"Retrieved Difference Size: "<<setDiff[0].size()+setDiff[1].size()<<"\n";
     }else{
         cout<<"Sets Identical...\n";
     }
-
+    if(verbose)
+        std::cout << "Time Taken: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << "\n";
     int ans = 0;
     for(int x: A) if(!B.count(x)) ans++;
     for(int x: B) if(!A.count(x)) ans++;

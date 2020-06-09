@@ -8,5 +8,6 @@
 
 std::unordered_set<int> getRandomSet(int size, int start, int end);
 void printSet(const std::string& name, std::unordered_set<int>& A);
+std::unordered_set<int> getDatasetFromFile(const std::string& filename);
 
 #endif //IBFSETDIFF_UTIL_H
