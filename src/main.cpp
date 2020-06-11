@@ -24,6 +24,8 @@ typedef int (*hashFuncType)(int, int);
     #define SET2_SIZE 10
 #endif
 
+#define RECURSIVE_HASH_THRESHOLD 50
+
 class IBFCell{
     int idSum;
     int hashSum;
@@ -86,8 +88,10 @@ vector<int> getDiffHashedInd(int num, int cnt, int N){
     unordered_set<int> inds;
     for(int i=0; i<cnt; i++){
         int ind = hashFunctionK(num, N);
-        while(inds.count(ind)){
+        int count = 0;
+        while(inds.count(ind) && count < RECURSIVE_HASH_THRESHOLD){
             ind = hashFunctionK(ind, N);
+            count++;
         }
         inds.insert(ind);
     }
