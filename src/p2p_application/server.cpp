@@ -50,6 +50,9 @@ int main (int argc, char *argv[]) {
         hashes++; 
     }
 
+    
+    cout << "ALPHA: " << ALPHA << " BETA: " << BETA << " NUM_HASHES: " << NUM_HASHES << endl;
+
     //for (int j : B) {cout << j << endl;}
     cout << "num hashes: " << B.size() << endl;
     cout << "num hashes read: " << hashes << endl;
@@ -189,8 +192,10 @@ int main (int argc, char *argv[]) {
                 int d = strata1->estimateLength(strata2, Hc);
                 cout<<"Estimated Set Diff Size: "<<d<<endl;
                 estimated_diff_size = d;
-                estimated_diff_size = 100;
-
+                if (d == 0){
+                    estimated_diff_size = 40;
+                    cerr << "ESTIMATED DIFF ERROR d=0, using d=40\n";
+                }
                 /*cerr << "reconstructed strata1 \n";
                 for (auto row : strata1->ibfs){
                    for (auto column : row){
@@ -303,10 +308,10 @@ int main (int argc, char *argv[]) {
                     i++;
                 }
 
-                //cerr << "reconstructed ibf1\n";
-                //for (IBFCell * cell : ibf1){
-                //   cout<< to_string(cell->getIdSum()) + "\t" +  to_string(cell->getHashSum()) + "\t" + to_string(cell->getCount()) + "\t\r\n";
-                //}   
+                cerr << "reconstructed ibf1\n";
+                for (IBFCell * cell : ibf1){
+                   cout<< to_string(cell->getIdSum()) + "," +  to_string(cell->getHashSum()) + "," + to_string(cell->getCount()) + "\t";
+                }  
                 
                 cerr << "before encode\n";
                 //cerr << "ibf2: " << ibf2 << endl;
@@ -376,6 +381,10 @@ int main (int argc, char *argv[]) {
             }
 
             else if (curr_state == CALCULATE_ACTUAL_DIFF && recvd != ""){
+
+                //send set B
+                send_set(connection, B);
+
                 cerr << "\n---- NAIVE SET DIFFERENCE ----\n";
                 //parse set A
                 unordered_set<int> A;
@@ -391,8 +400,6 @@ int main (int argc, char *argv[]) {
                 }
                 cerr << "set parsed\n" << "size is: " << A.size() << endl;
  
-                //send set B
-                send_set(connection, B);
                 /*msg = "";
                 int i = 0;
                 int j = 0; 

@@ -17,6 +17,7 @@ int main (int argc, char *argv[]) {
     //unordered_set<int> A = {159, 100, 281, 171, 270, 137, 183, 119, 163, 260, 283};
     //unordered_set<int> A = getRandomSet(11, 100, 300);
     unordered_set<int> A;
+    cout << "ALPHA: " << ALPHA << " BETA: " << BETA << " NUM_HASHES: " << NUM_HASHES << endl;
 
     if (argc < 3){
         cerr << "please enter all arguments -- ./CLIENT /path/to/filename mode\n";
@@ -36,11 +37,13 @@ int main (int argc, char *argv[]) {
     while(getline(ifs, buf)){
         int temp = hash_func (buf);
         A.insert(temp);
+        i++;
     }
 
     //for (int j : A) {cout << j << endl;}
     cout << "num hashes: " << A.size() << endl;
-
+    cout << "num hashes read: " << i << endl;
+    i = 0;
 
     //create a socket
     int client_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -169,7 +172,11 @@ int main (int argc, char *argv[]) {
             int d = strata1->estimateLength(strata2, Hc);
             cout<<"Estimated Set Diff Size: "<<d<<endl;
             estimated_diff_size = d;
-            estimated_diff_size = 100;
+            //estimated_diff_size = 100;
+            if (d == 0){
+                estimated_diff_size = 40;
+                cerr << "ESTIMATED DIFF ERROR d=0, using d=40\n";
+            }
 
             //encode and send ibf1
             float alpha = ALPHA;
