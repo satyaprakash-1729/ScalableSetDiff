@@ -8,6 +8,8 @@
 #include <vector>
 #include <queue>
 #include <fstream>
+#include <algorithm>
+#include <math.h>
 
 #define IBFSETDIFF_UTIL_H
 
