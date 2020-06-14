@@ -267,20 +267,32 @@ public:
     }
 };
 
-void parseAndPopulate(int argc, char *argv[], int& alpha, int& beta, int& num_hashes,
+/*void parseAndPopulate(int argc, char *argv[], int& alpha, int& beta, int& num_hashes,
                         int& set1size, int& set2size, string& file1path,
-                        string& file2path, bool& verbose){
+                        string& file2path, bool& verbose){*/
+
+void parseAndPopulate(int argc, char *argv[], float& alpha, int& beta, int& num_hashes, string& filepath, string & mode){
     for(int i=1; i<argc; i++){
         if(string(argv[i]) == "--beta"){
             beta = stoi(string(argv[i+1]));
         }
-        else if(string(argv[i]) == "--alpha"){
+        /*else if(string(argv[i]) == "--alpha"){
             alpha = stoi(string(argv[i+1]));
+        }*/
+        else if(string(argv[i]) == "--alpha"){
+            alpha = stof(string(argv[i+1]));
         }
         else if(string(argv[i]) == "--num_hashes"){
             num_hashes = stoi(string(argv[i+1]));
         }
-        else if(string(argv[i]) == "--set1size"){
+        else if(string(argv[i]) == "--filepath"){
+            filepath = string(argv[i+1]);
+        }
+        else if(string(argv[i]) == "--mode"){
+            mode = string(argv[i+1]);
+        }
+
+        /*else if(string(argv[i]) == "--set1size"){
             set1size = stoi(string(argv[i+1]));
         }
         else if(string(argv[i]) == "--set2size"){
@@ -292,14 +304,19 @@ void parseAndPopulate(int argc, char *argv[], int& alpha, int& beta, int& num_ha
         else if(string(argv[i]) == "--file2path"){
             file2path = string(argv[i+1]);
         }
+       
         else if(string(argv[i]) == "--verbose"){
             verbose = true;
             i--;
-        }
+        }*/
         else{
-            cout<<"Usage: ./IBFSetDiff --beta BETA --alpha ALPHA --num_hashes NUM_HASHES --file1path path --file2path path --set1size size --set2size size --verbose\n";
+            cout<<"Usage: ./IBFSetDiff --beta BETA --alpha ALPHA --num_hashes NUM_HASHES --filepath path --mode mode\n";
             exit(1);
         }
+        /*else{
+            cout<<"Usage: ./IBFSetDiff --beta BETA --alpha ALPHA --num_hashes NUM_HASHES --file1path path --file2path path --set1size size --set2size size --verbose\n";
+            exit(1);
+        }*/
         i++;
     }
 }
