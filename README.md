@@ -1,8 +1,9 @@
 # CS216: Set Difference using Inverse Bloom Filter
 
 Prerequisites:
-- cmake version 3.17.3
+- cmake version >=3.15
 - GNU Make 4.1
+- C++-14
 
 see main.cpp for some data sets for testing
 
