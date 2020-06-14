@@ -34,7 +34,7 @@ General instructions on how to run the p2p application (see next section below f
 Three pairs of test files are provided: p2p_1000_node1_diff3.dat and p2p_1000_node2_diff3.dat, p2p_1000_node1_diff6.dat and p2p_1000_node2_diff6.dat, and p2p_1000_node1_diff10.dat and p2p_1000_node2_diff10.dat. All are generated from a base file of 1000 rows of data. Each pair of files is denoted by node1 and node2, which means one file should be given as input to SERVER and the other as input to CLIENT. Each file also has some number of rows of data missing, as denoted by diff#. Thus, its corresponding file will have that many rows that this file does not have, resulting in a set difference. If each file in a pair is missing X rows, then the total set difference will be 2X (assuming all their missing rows are different).
 
 Example commands to run p2p_application on provided test files:
-1. building CLIENT/SERVER
+1. building CLIENT/SERVER <br/>
     i. cd ScalableSetDiff <br/>
     ii. mkdir build<br/>
     iii. cd build<br/>
@@ -55,3 +55,21 @@ Example commands to run p2p_application on provided test files:
         ii. ./CLIENT --alpha 6 --filepath ../test_files/p2p_1000_node1_diff10.dat --mode both<br/>
 
 3. see the last line of the output, i.e. "both methods are equal:". If true, then the IBF algorithm is the same as the naive algorithm, so it gave the correct difference. If false, then it gave the incorrect difference.
+
+
+Code to generate test files with the appriopriate set difference (number of rows missing) is included in src/p2p_testfile_generation. split.cpp takes one base input file and generates two output files with the specified number of rows of data (chosen randomly) missing, one for each node. The base input file should be a portion of an extremely large file with the desired number of rows of data, e.g. head -n 10000 very_large.dat> ten_thousand_base.dat. generate_data.sh is a script that repeatedly calls split.cpp and was used to generate data for the tests that we ran.
+
+To build and run split.cpp
+1. change current working directory to src/p2p_testfile_generation <br/>
+    i.e. cd src/p2p_testfile_generation <br/>
+2. compile split.cpp with g++ <br/>
+    i.e. g++ split.cpp -std=c++11 -o split <br/>
+3. run split with arguments: path to input file, number of rows in file, average number of rows to exclude, maximum number of rows to exclude, and two output file paths <br/>
+    i.e. ./split ../../../test/thousand.dat 1000 10 15 ../../test_files/thousand1_test.dat ../../test_files/thousand2_test.dat <br/>
+
+To run generate_data.sh:
+1. run generate_data.sh with arguments: directory with all necessary base files, average number of rows to exclude, maximum number of rows to exclude, and output directory <br/>
+    i.e. ./generate_data.sh ../../../test 10 15 .
+
+Note generate_data.sh needs a set of specifically named files with the right number of rows in the input a directory to run correctly (see generate_data.sh for what those files are). Thus, this was meant more to help us run these particular tests easily, rather than be more broadly useful.
+
