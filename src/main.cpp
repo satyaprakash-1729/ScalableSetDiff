@@ -252,7 +252,7 @@ public:
     }
 };
 
-void parseAndPopulate(int argc, char *argv[], int& alpha, int& beta, int& num_hashes,
+void parseAndPopulate(int argc, char *argv[], float& alpha, int& beta, int& num_hashes,
                         int& set1size, int& set2size, string& file1path,
                         string& file2path, bool& verbose){
     for(int i=1; i<argc; i++){
@@ -260,7 +260,7 @@ void parseAndPopulate(int argc, char *argv[], int& alpha, int& beta, int& num_ha
             beta = stoi(string(argv[i+1]));
         }
         else if(string(argv[i]) == "--alpha"){
-            alpha = stoi(string(argv[i+1]));
+            alpha = (float)stod(string(argv[i+1]));
         }
         else if(string(argv[i]) == "--num_hashes"){
             num_hashes = stoi(string(argv[i+1]));
@@ -290,7 +290,7 @@ void parseAndPopulate(int argc, char *argv[], int& alpha, int& beta, int& num_ha
 }
 
 int main(int argc, char *argv[]) {
-    int alpha = ALPHA;
+    float alpha = ALPHA;
     int beta = BETA;
     int num_hashes = NUM_HASHES;
     int set1size = SET1_SIZE;
