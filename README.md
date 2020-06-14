@@ -35,23 +35,23 @@ Three pairs of test files are provided: p2p_1000_node1_diff3.dat and p2p_1000_no
 
 Example commands to run p2p_application on provided test files:
 1. building CLIENT/SERVER
-    i. cd ScalableSetDiff
-    ii. mkdir build
-    iii. cd build
-    iv. cmake ..
-    v. make SERVER && make CLIENT (or just "make" to make everything)
+    i. cd ScalableSetDiff <br/>
+    ii. mkdir build<br/>
+    iii. cd build<br/>
+    iv. cmake ..<br/>
+    v. make SERVER && make CLIENT (or just "make" to make everything)<br/>
 
 2. running the CLIENT/SERVER with both IBF and naive algorithms (CLIENT and SERVER needs to be run from separate terminals)
-    a. total set difference of 6 with alpha=3.35
-        i. ./SERVER --alpha 3.35 --filepath ../test_files/p2p_1000_node2_diff3.dat --mode both
-        ii. ./CLIENT --alpha 3.35 --filepath ../test_files/p2p_1000_node1_diff3.dat --mode both
+    a. total set difference of 6 with alpha=3.35<br/>
+        i. ./SERVER --alpha 3.35 --filepath ../test_files/p2p_1000_node2_diff3.dat --mode both<br/>
+        ii. ./CLIENT --alpha 3.35 --filepath ../test_files/p2p_1000_node1_diff3.dat --mode both<br/>
 
-    b. total set difference of 12 with alpha=5
-        i. ./SERVER --alpha 5 --filepath ../test_files/p2p_1000_node2_diff6.dat --mode both
-        ii. ./CLIENT --alpha 5 --filepath ../test_files/p2p_1000_node1_diff6.dat --mode both
+    b. total set difference of 12 with alpha=5<br/>
+        i. ./SERVER --alpha 5 --filepath ../test_files/p2p_1000_node2_diff6.dat --mode both<br/>
+        ii. ./CLIENT --alpha 5 --filepath ../test_files/p2p_1000_node1_diff6.dat --mode both<br/>
 
-    c. total set difference of 20 with alpha=6
-        i. ./SERVER --alpha 6 --filepath ../test_files/p2p_1000_node2_diff10.dat --mode both
-        ii. ./CLIENT --alpha 6 --filepath ../test_files/p2p_1000_node1_diff10.dat --mode both
+    c. total set difference of 20 with alpha=6<br/>
+        i. ./SERVER --alpha 6 --filepath ../test_files/p2p_1000_node2_diff10.dat --mode both<br/>
+        ii. ./CLIENT --alpha 6 --filepath ../test_files/p2p_1000_node1_diff10.dat --mode both<br/>
 
 3. see the last line of the output, i.e. "both methods are equal:". If true, then the IBF algorithm is the same as the naive algorithm, so it gave the correct difference. If false, then it gave the incorrect difference.
