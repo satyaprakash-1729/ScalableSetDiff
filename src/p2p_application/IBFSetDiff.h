@@ -5,7 +5,7 @@ typedef int (*hashFuncType)(int, int);
 
 
 #ifndef ALPHA
-    #define ALPHA 3.35
+    #define ALPHA 6
 #endif
 
 #ifndef BETA
