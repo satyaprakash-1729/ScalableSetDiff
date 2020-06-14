@@ -5,7 +5,7 @@ typedef int (*hashFuncType)(int, int);
 
 
 #ifndef ALPHA
-    #define ALPHA 6
+    #define ALPHA 3.35
 #endif
 
 #ifndef BETA
@@ -13,7 +13,7 @@ typedef int (*hashFuncType)(int, int);
 #endif
 
 #ifndef NUM_HASHES
-    #define NUM_HASHES 2
+    #define NUM_HASHES 3
 #endif
 
 #ifndef SET1_SIZE
