@@ -7,6 +7,17 @@ to run the basic set difference run:
 2. ./IBFSetDiff --alpha 4 --beta 80 --num_hashes 3 --file1path path1 --file2path path2
 3. Or for a random list ./IBFSetDiff --alpha 4 --beta 80 --num_hashes 3 --set1size 10 --set2size 10
 
+Test Files:
+
+1. Test files are 3 pairs of files with 1000 random numbers which are common in the pair and 6, 12 and 20 numbers which are distinct in the files dataset1_1000_6.dat -- dataset2_1000_6.dat, dataset1_1000_12.dat -- dataset2_1000_12.dat and dataset1_1000_20.dat -- dataset2_1000_20.dat respectively.
+2. Commands to run:<br/>
+	i. cd build<br/>
+	ii. cmake ..<br/>
+	iii. make IBFSetDiff
+	iv. ./IBFSetDiff --file1path ../test_files/dataset1_1000_6.dat --file2path ../test_files/dataset2_1000_6.dat --alpha 5<br/>
+	v. ./IBFSetDiff --file1path ../test_files/dataset1_1000_12.dat --file2path ../test_files/dataset2_1000_12.dat --alpha 5<br/>
+	vi. ./IBFSetDiff --file1path ../test_files/dataset1_1000_20.dat --file2path ../test_files/dataset2_1000_20.dat --alpha 6<br/>
+
 To run the p2p application:
 1. use cmake and make to build CLIENT and SERVER. I used ALPHA=20 BETA=10 and NUM_HAHES=3 for cmake.
 2. run "./SERVER path/to/file_name mode" first, and then "./CLIENT path/to/filename mode" after.

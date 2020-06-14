@@ -5,7 +5,7 @@ typedef int (*hashFuncType)(int, int);
 
 
 #ifndef ALPHA
-    #define ALPHA 4
+    #define ALPHA 6
 #endif
 
 #ifndef BETA
@@ -24,7 +24,7 @@ typedef int (*hashFuncType)(int, int);
     #define SET2_SIZE 10
 #endif
 
-#define RECURSIVE_HASH_THRESHOLD 50
+#define RECURSIVE_HASH_THRESHOLD 100
 
 class IBFCell{
     int idSum;
