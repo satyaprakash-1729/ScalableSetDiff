@@ -17,22 +17,32 @@ vector<IBFCell*> ibf1;
 vector<IBFCell*> ibf2;
 
 int main (int argc, char *argv[]) {
-    if (argc < 3){
+    float alpha = ALPHA;
+    int beta = BETA;
+    int num_hashes = NUM_HASHES;
+    string filepath = "";
+    string mode = "both";
+
+    /*if (argc < 3){
         cerr << "please enter all arguments -- ./SERVER /path/to/filename mode\n";
+        return -1;
+    }*/
+
+    parseAndPopulate(argc, argv, alpha, beta, num_hashes, filepath, mode);
+
+    if (filepath == ""){
+        cerr << "please enter filepath\n";
         return -1;
     }
 
 
     int sockopt = 1;
-    string mode (argv[2]);
+    //string mode (filepath);
 
-    //unordered_set<int> B = getRandomSet(11, 100, 300);
     unordered_set<int> B;
 
     ifstream ifs;
-    //ifs.open("test_files/host2.data", ios::binary);
-    //ifs.open("test_files/dataset2.dat", ios::binary);
-    ifs.open(argv[1], ios::binary);
+    ifs.open(filepath, ios::binary);
 
     hash<string> hash_func;
     int hashes = 0;
@@ -42,16 +52,16 @@ int main (int argc, char *argv[]) {
     int i = 0;
     while(getline(ifs, buf)){
         int temp = hash_func (buf); 
-        if (B.find(temp) != B.end()){
+        /*if (B.find(temp) != B.end()){
             cerr << temp << " repeated!\n";
-        }
+        }*/
         B.insert(temp);       
         
         hashes++; 
     }
 
     
-    cout << "ALPHA: " << ALPHA << " BETA: " << BETA << " NUM_HASHES: " << NUM_HASHES << endl;
+    cout << "alpha: " << alpha << " beta: " << beta << " num_hashes: " << num_hashes << endl;
 
     //for (int j : B) {cout << j << endl;}
     cout << "num hashes: " << B.size() << endl;
@@ -154,7 +164,7 @@ int main (int argc, char *argv[]) {
                 
                 //estimate diff diff size
                 cerr <<"before strata2 encoded\n";
-                strata2 = new Strata_IBF(BETA, NUM_HASHES, logu);
+                strata2 = new Strata_IBF(beta, num_hashes, logu);
                 strata2->encode(B, Hc);
                 cerr << "strata2 encoded\n";
 
@@ -162,7 +172,7 @@ int main (int argc, char *argv[]) {
             }
             else if (curr_state == ESTIMATE_DIFF_SIZE && recvd != ""){
                 //decode strata1
-                Strata_IBF * strata1 = new Strata_IBF(BETA, NUM_HASHES, logu);
+                Strata_IBF * strata1 = new Strata_IBF(beta, num_hashes, logu);
 
                 vector<string> rows;
                 split(recvd, "\r\n", rows);
@@ -281,10 +291,10 @@ int main (int argc, char *argv[]) {
             }*/
 
             else if (curr_state == CALCULATE_SET_DIFF && recvd != ""){
-                float alpha = ALPHA;
+                //float alpha = ALPHA;
                 int d = estimated_diff_size;
                 int N = d*alpha;
-                int k = NUM_HASHES;
+                int k = num_hashes;
 
                 //vector<IBFCell*> ibf1(N);
                 ibf1.resize(N);

@@ -17,18 +17,32 @@ int main (int argc, char *argv[]) {
     //unordered_set<int> A = {159, 100, 281, 171, 270, 137, 183, 119, 163, 260, 283};
     //unordered_set<int> A = getRandomSet(11, 100, 300);
     unordered_set<int> A;
-    cout << "ALPHA: " << ALPHA << " BETA: " << BETA << " NUM_HASHES: " << NUM_HASHES << endl;
+    unordered_set<int> ans;
 
-    if (argc < 3){
-        cerr << "please enter all arguments -- ./CLIENT /path/to/filename mode\n";
+    float alpha = ALPHA;
+    int beta = BETA;
+    int num_hashes = NUM_HASHES;
+
+    string filepath = "";
+    string mode = "both";
+
+    parseAndPopulate(argc, argv, alpha, beta, num_hashes, filepath, mode);
+
+    if (filepath == ""){
+        cerr << "please enter filepath\n";
         return -1;
     }
 
-    string mode (argv[2]);    
+    cout << "alpha: " << alpha  << " beta: " << beta << " num_hashes: " << num_hashes << endl;
+
+    /*if (argc < 3){
+        cerr << "please enter all arguments -- ./CLIENT /path/to/filename mode\n";
+        return -1;
+    }*/
+
+    //string mode (argv[2]);    
     ifstream ifs;
-    //ifs.open("test_files/host1.data", ios::binary);
-    //ifs.open("test_files/dataset1.dat", ios::binary);
-    ifs.open(argv[1], ios::binary);
+    ifs.open(filepath, ios::binary);
 
     hash<string> hash_func;
     cout << "reading file hashes\n";
@@ -116,9 +130,13 @@ int main (int argc, char *argv[]) {
             //calculate logu
             logu = (int) (log(max(logu1, logu2))/log(2)) + 1;
 
+   
+            //calculate logu
+            logu = (int) (log(max(logu1, logu2))/log(2)) + 1;
+
             //encode own vector
             cerr << "before encode strata1\n";
-            strata1 = new Strata_IBF (BETA, NUM_HASHES, logu);
+            strata1 = new Strata_IBF (beta, num_hashes, logu);
             strata1->encode(A, Hc);
             cerr << "after encode strata1\n";
 
@@ -140,7 +158,7 @@ int main (int argc, char *argv[]) {
 
         else if (curr_state == ESTIMATE_DIFF_SIZE && recvd != "" ){
             //decode strata2
-            Strata_IBF * strata2 = new Strata_IBF(BETA, NUM_HASHES, logu);
+            Strata_IBF * strata2 = new Strata_IBF(beta, num_hashes, logu);
 
             vector<string> rows;
             split(recvd, "\r\n", rows);
@@ -179,10 +197,10 @@ int main (int argc, char *argv[]) {
             }
 
             //encode and send ibf1
-            float alpha = ALPHA;
+            //float alpha = ALPHA;
             d = estimated_diff_size;
             int N = d*alpha;
-            int k = NUM_HASHES;
+            int k = num_hashes;
 
             ibf1.resize(N);
             for (int i=0; i<N; i++) ibf1[i] = new IBFCell();
@@ -284,10 +302,10 @@ int main (int argc, char *argv[]) {
         }*/
 
         else if (curr_state == CALCULATE_SET_DIFF && recvd != ""){
-            float alpha = ALPHA;
+            //float alpha = ALPHA;
             int d = estimated_diff_size;
             int N = d*alpha;
-            int k = NUM_HASHES;
+            int k = num_hashes;
 
             //parse received ibf2
             vector<IBFCell*> ibf2(N);
@@ -319,10 +337,9 @@ int main (int argc, char *argv[]) {
 
             decode(diff, diff_A_B, diff_B_A, k, Hc, N);
 
-            /*unordered_set<int> ans;
             ans.insert(diff_A_B.begin(), diff_A_B.end());
             ans.insert(diff_B_A.begin(), diff_B_A.end());
-            */
+            
 
             cout<<"---- CALCULATED SET DIFFERENCE ----\n";
             /*for(int x : ans){
@@ -404,6 +421,14 @@ int main (int argc, char *argv[]) {
                 
                 cout<<endl;
 
+                unordered_set<int> actual_ans;
+                actual_ans.insert(diff_A_B.begin(), diff_A_B.end());
+                actual_ans.insert(diff_B_A.begin(), diff_B_A.end());
+
+                if (mode == "both"){
+                    cerr << "\nboth methods are equal: " << ((actual_ans == ans) ? "true" : "false") << endl;
+                }
+
                 return 0;
         }
 
@@ -414,8 +439,5 @@ int main (int argc, char *argv[]) {
             break;
         }
      }
-
-    close(client_sock);
-    return 0;
-
 }
+
