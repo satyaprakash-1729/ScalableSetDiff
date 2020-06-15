@@ -15,7 +15,7 @@ string getMessage(int connection){
 
         if (!printed) {
            printed = true;
-           cerr << "--receiving message--";
+           cerr << "--receiving message--\n";
         }
 
         if (bytes_read < 4){

@@ -9,8 +9,7 @@
 
 #include "IBFSetDiff.h"
 #include "hosts.h"
-//#define BUFSIZE 100
-#define FILECHUNK 5
+
 #define PORT 9998
 
 vector<IBFCell*> ibf1;
@@ -23,11 +22,7 @@ int main (int argc, char *argv[]) {
     string filepath = "";
     string mode = "both";
 
-    /*if (argc < 3){
-        cerr << "please enter all arguments -- ./SERVER /path/to/filename mode\n";
-        return -1;
-    }*/
-
+    //parse argument parameters
     parseAndPopulate(argc, argv, alpha, beta, num_hashes, filepath, mode);
 
     if (filepath == ""){
@@ -35,9 +30,9 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
+    cout << "alpha: " << alpha << " beta: " << beta << " num_hashes: " << num_hashes << endl;
 
     int sockopt = 1;
-    //string mode (filepath);
 
     unordered_set<int> B;
 
@@ -52,20 +47,15 @@ int main (int argc, char *argv[]) {
     int i = 0;
     while(getline(ifs, buf)){
         int temp = hash_func (buf); 
-        /*if (B.find(temp) != B.end()){
-            cerr << temp << " repeated!\n";
-        }*/
         B.insert(temp);       
         
         hashes++; 
     }
 
     
-    cout << "alpha: " << alpha << " beta: " << beta << " num_hashes: " << num_hashes << endl;
-
-    //for (int j : B) {cout << j << endl;}
     cout << "num hashes: " << B.size() << endl;
     cout << "num hashes read: " << hashes << endl;
+
     //create a socket
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock == -1) {
@@ -109,7 +99,7 @@ int main (int argc, char *argv[]) {
           exit(EXIT_FAILURE);
         }
 
-        // Vars
+        // Variables needed
         string recvd = "";     
         string msg = "";
         enum State { INITIAL,SEND_LOGU, ESTIMATE_DIFF_SIZE, CALCULATE_SET_DIFF, CALCULATE_ACTUAL_DIFF}; 
@@ -135,9 +125,7 @@ int main (int argc, char *argv[]) {
                 break;
             }
 
-            //cout << "The message was: " << recvd << endl;
-            //cout << "The message length was: " << recvd.size() << endl;
-
+            // if hello message received, return hello message
             if (curr_state == INITIAL && recvd == "Host 1 Hello\r\n\r\n" ){
                 msg = "Host 2 Hello\r\n\r\n";
                 send(connection, msg.c_str(), msg.size(), 0);
@@ -151,8 +139,6 @@ int main (int argc, char *argv[]) {
             
             else if (curr_state == SEND_LOGU && recvd != ""){
                 //parse message for logu1
-                //size_t end = recvd.find("\r\n\r\n"); 
-                //int logu1 = stoi(recvd.substr(0, end));
                 int logu1 = stoi(recvd);
 
                 //send logu2
@@ -171,7 +157,7 @@ int main (int argc, char *argv[]) {
                 curr_state = ESTIMATE_DIFF_SIZE;
             }
             else if (curr_state == ESTIMATE_DIFF_SIZE && recvd != ""){
-                //decode strata1
+                //decode received strata1
                 Strata_IBF * strata1 = new Strata_IBF(beta, num_hashes, logu);
 
                 vector<string> rows;
@@ -183,15 +169,8 @@ int main (int argc, char *argv[]) {
                     vector<string> cells;
                     split(l, "\t", cells);
                     for (string c : cells){
-                        //cerr << "cell: " << c << endl;
-                        //cerr << "strata1: " << (intptr_t) strata1 << endl;
-                        //cerr << "strata1->ibfs: " << (intptr_t) strata1->ibfs << endl;
-                        //cerr << "i: " << i << " j: " << j << endl;
-                        //cerr << "strata1->ibfs[i][j] : " <<  strata1->ibfs[i][j] << endl;
-        
                         vector<string> fields;
                         split(c, ",", fields);
-                        //cerr << fields.size() << endl;
                         strata1->ibfs[i][j]->set(stoi(fields[0]),  stoi(fields[1]), stoi(fields[2])); 
                         j++;
                     }
@@ -206,14 +185,7 @@ int main (int argc, char *argv[]) {
                     estimated_diff_size = 40;
                     cerr << "ESTIMATED DIFF ERROR d=0, using d=40\n";
                 }
-                /*cerr << "reconstructed strata1 \n";
-                for (auto row : strata1->ibfs){
-                   for (auto column : row){
-                       cerr << column->getIdSum() << "," << column->getHashSum() << "," << column->getCount() << "\t";
-                   }
-                   cerr << endl;
-                }*/
-
+               
                 //sending encoded strata2
                 msg = "";
                 for (auto row : strata2->ibfs){
@@ -223,88 +195,22 @@ int main (int argc, char *argv[]) {
                     msg = msg + "\r\n";
                 }
                 msg = msg + "\r\n";
-                //cerr << "encoded strata2 vector sent\n" << msg << endl;
                 send(connection, msg.c_str() , msg.size(), 0 );
                 curr_state = CALCULATE_SET_DIFF;
             }
 
-            /*else if (curr_state == ESTIMATE_DIFF_SIZE && recvd != ""){
-                //parse message for set size and min hashes
-                size_t curr_index, prev_index = 0;
-                vector <int> their_hashes;
-                int their_size = 0;
-
-                //parse size
-                curr_index = recvd.find("\r\n"); 
-                their_size = stoi(recvd.substr(prev_index, curr_index - prev_index));
-                prev_index = curr_index + 2;
-                curr_index = recvd.find("\r\n", prev_index);
-
-                //parse min hashes
-                while (curr_index != string::npos) {
-                    string substring = recvd.substr(prev_index, curr_index - prev_index);
-                    cerr << "substr: " << substring << endl; 
-                    if (substring.size() == 0){
-                      break;
-                    }
-                    their_hashes.push_back(stoi(substring));
-
-                    prev_index = curr_index + 2;
-                    curr_index = recvd.find("\r\n", prev_index);
-                }
-
-                //sending own sizes and min hashes
-                msg = "";
-                vector <int> my_hashes;
-                int hash = 0;
- 
-                //send own size 
-                cout << "B's size is: " << B.size() << endl;
-                msg = msg + to_string(B.size()) + "\r\n";
-
-                //send own min hashes
-                for(hashFuncType& hashFn: hashes){
-                    hash = getMinHash(B, hashFn);
-                    msg = msg + to_string(hash) + "\r\n";
-                    my_hashes.push_back(hash);
-                }
-
-                msg = msg + "\r\n";
-                send(connection, msg.c_str() , msg.size(), 0 );  
-
-                cout << "their size: " << their_size << endl;
-                for (int i : their_hashes){cout << "hash: " << i << endl;}
-
- 
-                //calculate diff size
-                int m = 0;
-                for(int i = 0; i < my_hashes.size(); i++){
-                    if(my_hashes[i] == their_hashes[i]) m++;
-                }
-
-                float k = hashes.size();
-                float r = float(m)/k;
-                estimated_diff_size = ((1.-r)/(1.+r))*(float(their_size+B.size()));
-                cout << "diff: " << estimated_diff_size << endl;
- 
-                curr_state = CALCULATE_SET_DIFF;
-            }*/
-
+            //compute IBF set difference
             else if (curr_state == CALCULATE_SET_DIFF && recvd != ""){
                 //float alpha = ALPHA;
                 int d = estimated_diff_size;
                 int N = d*alpha;
                 int k = num_hashes;
 
-                //vector<IBFCell*> ibf1(N);
                 ibf1.resize(N);
                 for (int i=0; i<N; i++) ibf1[i] = new IBFCell();
 
-                //vector<IBFCell*> ibf2(N);
                 ibf2.resize(N);
                 for (int i=0; i<N; i++) ibf2[i] = new IBFCell();
-
-                //hashFuncType Hc = &hashFunction4;
  
                 vector<string> cell_strings;
                 split(recvd, "\r\n", cell_strings);
@@ -324,11 +230,6 @@ int main (int argc, char *argv[]) {
                 }  
                 
                 cerr << "before encode\n";
-                //cerr << "ibf2: " << ibf2 << endl;
-                /*cerr << "N is: " << N << endl;
-                for (IBFCell * cell : ibf2){
-                    cerr << cell << endl;
-                }*/
                 encode(B, N, k, Hc, ibf2);
                 cerr << "after encode\n";
 
@@ -338,9 +239,7 @@ int main (int argc, char *argv[]) {
                    msg = msg + to_string(cell->getIdSum()) + "\t" +  to_string(cell->getHashSum()) + "\t" + to_string(cell->getCount()) + "\t\r\n";
                 }               
                 msg = msg + "\r\n";
-                //cerr << "encoded ibf vector sent" << msg << endl;
                 send(connection, msg.c_str() , msg.size(), 0 );
-
 
                 //calculate set difference
                 vector<IBFCell*> diff(N);
@@ -359,13 +258,7 @@ int main (int argc, char *argv[]) {
                 ans.insert(diff_B_A.begin(), diff_B_A.end());
                 
 
-                //cerr<<"set diff size: " << ans.size() << endl;
                 cerr<<"\n---- CALCULATED SET DIFFERENCE ----\n";
-                /*for(int x : ans){
-                    cout<<x<<", " ;
-                }
-                cout<< endl << endl;
-                */
                 cerr << "\n---- diff_A_B ----\n";
                 cerr << "size of diff_A_B: " << diff_A_B.size() << endl;
                 for(int x : diff_A_B){
@@ -410,29 +303,6 @@ int main (int argc, char *argv[]) {
                 }
                 cerr << "set parsed\n" << "size is: " << A.size() << endl;
  
-                /*msg = "";
-                int i = 0;
-                int j = 0; 
-
-                
-                for (int x : B){
-                    msg = msg + to_string(x) + "\r\n";
-                    i++;
-
-                    if ( i == 100000){
-                        send(connection, msg.c_str() , msg.size(), 0 );
-                        i = 0;
-                        msg = "";
-                        j++;
-                        cerr << "sent " << j*100000 << endl;
-                    }
-                }
-                msg = msg + "\r\n";
-
-                //cerr << "encoded strata2 vector sent\n" << msg << endl;
-                send(connection, msg.c_str() , msg.size(), 0 );
-                */
-
                 unordered_set<int> diff_A_B;
                 unordered_set<int> diff_B_A;
                 
@@ -465,9 +335,9 @@ int main (int argc, char *argv[]) {
 
         }
 
-        // Send a message to the connection
-        string response = "Good talking to you\r\n\r\n";
-        send(connection, response.c_str(), response.size(), 0);
+        // Send a message to end the connection
+        string end = "Bye\r\n\r\n";
+        send(connection, end.c_str(), end.size(), 0);
 
         // Close the connections
         close(connection);
